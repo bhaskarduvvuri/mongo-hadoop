@@ -16,18 +16,18 @@
 
 package com.mongodb.hadoop.splitter;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import com.mongodb.hadoop.util.MongoConfigUtil;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoURI;
-import com.mongodb.hadoop.util.MongoConfigUtil;
 import com.mongodb.util.JSON;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class MultiCollectionSplitBuilder {
     private List<CollectionSplitterConf> collectionSplitters;

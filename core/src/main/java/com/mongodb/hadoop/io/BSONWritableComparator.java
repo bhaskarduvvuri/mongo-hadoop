@@ -16,11 +16,12 @@
 
 package com.mongodb.hadoop.io;
 
-import com.mongodb.hadoop.util.BSONComparator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
+
+import com.mongodb.hadoop.util.BSONComparator;
 
 public class BSONWritableComparator extends WritableComparator {
 

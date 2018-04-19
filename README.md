@@ -1,5 +1,22 @@
 # MongoDB Connector for Hadoop
 
+
+## Aggregate Support
+
+Use the below to use aggregate
+
+	Configuration conf = new Configuration();
+	conf.set("mongo.input.uri", uri);
+	conf.setBoolean("mongo.input.aggregate", true);
+	conf.set("mongo.input.aggregateMap", query);
+
+Sample Query
+
+	private static final String MONGO_QUERY = "[{ $match: { \"lastUpdateTime\": { $gte: \"(new Date()-691200000).toString()\" } } },"
+			+ "{ $group: { \"_id\": {Time: \"$lastUpdateTime\"}, count: { $sum: 1 } } },"
+			+ "{ $project: { \"_id\": 0, \"Timestamp\": \"$_id.Time\" \"count\": 1 } },"
+			+ "{ $sort: { Timestamp: 1 } }]";
+
 ## Purpose
 
 The MongoDB Connector for Hadoop is a library which allows MongoDB (or backup files in its data format, BSON) to be used as an input source, or output destination, for Hadoop MapReduce tasks. It is designed to allow greater flexibility and performance and make it easy to integrate data in MongoDB with other parts of the Hadoop ecosystem including the following:

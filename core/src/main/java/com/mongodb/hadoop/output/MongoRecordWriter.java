@@ -16,15 +16,9 @@
 
 package com.mongodb.hadoop.output;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.hadoop.MongoOutput;
-import com.mongodb.hadoop.io.BSONWritable;
-import com.mongodb.hadoop.io.MongoUpdateWritable;
-import com.mongodb.hadoop.io.MongoWritableTypes;
-import com.mongodb.hadoop.util.CompatUtils;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.io.IOException;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -34,8 +28,15 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.bson.BSONObject;
 
-import java.io.IOException;
-import java.util.Map;
+import com.mongodb.hadoop.MongoOutput;
+import com.mongodb.hadoop.io.BSONWritable;
+import com.mongodb.hadoop.io.MongoUpdateWritable;
+import com.mongodb.hadoop.io.MongoWritableTypes;
+import com.mongodb.hadoop.util.CompatUtils;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 
 
 public class MongoRecordWriter<K, V> extends RecordWriter<K, V> {
@@ -48,7 +49,7 @@ public class MongoRecordWriter<K, V> extends RecordWriter<K, V> {
 
     public MongoRecordWriter(
       final DBCollection c,
-      final com.mongodb.hadoop.util.CompatUtils.TaskAttemptContext ctx) {
+      final CompatUtils.TaskAttemptContext ctx) {
         collection = c;
         context = ctx;
         bsonWritable = new BSONWritable();

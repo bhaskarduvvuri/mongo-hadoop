@@ -16,10 +16,10 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.hadoop.input.BSONFileSplit;
-import com.mongodb.hadoop.util.CompatUtils;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
@@ -48,9 +48,10 @@ import org.bson.LazyBSONCallback;
 import org.bson.LazyBSONDecoder;
 import org.bson.LazyBSONObject;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.mongodb.hadoop.input.BSONFileSplit;
+import com.mongodb.hadoop.util.CompatUtils;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.BasicDBObjectBuilder;
 
 public class BSONSplitter extends Configured implements Tool {
     private static final String CORE_JAR = "mongo-hadoop-core.jar";

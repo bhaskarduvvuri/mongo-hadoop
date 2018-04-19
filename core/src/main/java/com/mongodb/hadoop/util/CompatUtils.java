@@ -1,6 +1,5 @@
 package com.mongodb.hadoop.util;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.Progressable;

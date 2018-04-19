@@ -17,11 +17,9 @@
 
 package com.mongodb.hadoop.util;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoURI;
-import com.mongodb.hadoop.splitter.MongoSplitter;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.RawComparator;
@@ -31,8 +29,11 @@ import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapred.Reducer;
 
-import java.util.List;
-import java.util.Map;
+import com.mongodb.hadoop.splitter.MongoSplitter;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClientURI;
+import com.mongodb.MongoURI;
 
 /**
  * Configuration helper tool for MongoDB related Map/Reduce jobs

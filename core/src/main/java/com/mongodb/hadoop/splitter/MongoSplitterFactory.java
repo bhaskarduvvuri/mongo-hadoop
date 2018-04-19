@@ -16,16 +16,17 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoClientURI;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import java.util.List;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.CommandResult;
+import com.mongodb.DBCollection;
+import com.mongodb.MongoClientURI;
 
 /**
  * Examines a collection and dynamically chooses which implementation of MongoSplitter to use, based on our configuration and the

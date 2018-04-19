@@ -16,12 +16,11 @@
 
 package com.mongodb.hadoop;
 
+import java.io.IOException;
+import java.util.List;
+
 // Mongo
 
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.splitter.MongoSplitter;
-import com.mongodb.hadoop.splitter.MongoSplitterFactory;
-import com.mongodb.hadoop.splitter.SplitFailedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -32,8 +31,11 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.bson.BSONObject;
 
-import java.io.IOException;
-import java.util.List;
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.input.MongoRecordReader;
+import com.mongodb.hadoop.splitter.MongoSplitter;
+import com.mongodb.hadoop.splitter.MongoSplitterFactory;
+import com.mongodb.hadoop.splitter.SplitFailedException;
 
 public class MongoInputFormat extends InputFormat<Object, BSONObject> {
     private static final Log LOG = LogFactory.getLog(MongoInputFormat.class);
@@ -46,7 +48,7 @@ public class MongoInputFormat extends InputFormat<Object, BSONObject> {
 
         final MongoInputSplit mis = (MongoInputSplit) split;
 
-        return new com.mongodb.hadoop.input.MongoRecordReader(mis);
+        return new MongoRecordReader(mis);
     }
 
     @Override

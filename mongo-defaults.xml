@@ -102,6 +102,16 @@
     <value><!-- mongodb://localhost/db.collection?option=value --></value>
   </property>
   <property>
+    <!-- if true, mongo.input.query don't execute, instead use mongo.input.aggregateMap for aggregate execution [{}]. -->
+    <name>mongo.input.aggregate</name>
+    <value>false</value>
+  </property>
+  <property>
+    <!-- The query, in JSON, to execute [OPTIONAL] -->
+    <name>mongo.input.aggregateMap</name>
+    <value></value>
+  </property>
+  <property>
     <!-- The query, in JSON, to execute [OPTIONAL] -->
     <name>mongo.input.query</name>
     <value></value>

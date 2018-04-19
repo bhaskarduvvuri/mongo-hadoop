@@ -1,18 +1,19 @@
 package com.mongodb.hadoop.splitter;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.InputSplit;
+
+import com.mongodb.hadoop.util.MongoConfigUtil;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.Bytes;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.hadoop.util.MongoConfigUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.InputSplit;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 
 /**

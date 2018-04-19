@@ -16,18 +16,8 @@
 
 package com.mongodb.hadoop.output;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkUpdateRequestBuilder;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.BulkWriteRequestBuilder;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.mongodb.hadoop.io.BSONWritable;
-import com.mongodb.hadoop.io.MongoUpdateWritable;
-import com.mongodb.hadoop.io.MongoWritableTypes;
-import com.mongodb.hadoop.util.CompatUtils;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -38,7 +28,18 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import java.io.IOException;
+import com.mongodb.hadoop.io.BSONWritable;
+import com.mongodb.hadoop.io.MongoUpdateWritable;
+import com.mongodb.hadoop.io.MongoWritableTypes;
+import com.mongodb.hadoop.util.CompatUtils;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkUpdateRequestBuilder;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.BulkWriteRequestBuilder;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 
 public class MongoOutputCommitter extends OutputCommitter {
 
@@ -246,12 +247,12 @@ public class MongoOutputCommitter extends OutputCommitter {
      * Get the Path to where temporary files should be stored for a
      * TaskAttempt, whose TaskAttemptContext is provided.
      *
-     * @param context the TaskAttemptContext.
+     * @param ctx the TaskAttemptContext.
      * @return the Path to the temporary file for the TaskAttempt.
      */
     public static Path getTaskAttemptPath(
-      final CompatUtils.TaskAttemptContext context) {
-        Configuration config = context.getConfiguration();
+      final CompatUtils.TaskAttemptContext ctx) {
+        Configuration config = ctx.getConfiguration();
         // Try to use the following base temporary directories, in this order:
         // 1. New-style option for task tmp dir
         // 2. Old-style option for task tmp dir
@@ -261,7 +262,7 @@ public class MongoOutputCommitter extends OutputCommitter {
         return new Path(
           String.format("%s/%s/%s/_out",
             getTempDirectory(config),
-            context.getTaskAttemptID().toString(), TEMP_DIR_NAME));
+            ctx.getTaskAttemptID().toString(), TEMP_DIR_NAME));
     }
 
 }

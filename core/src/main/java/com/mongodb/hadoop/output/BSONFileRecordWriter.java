@@ -16,11 +16,8 @@
 
 package com.mongodb.hadoop.output;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
-import com.mongodb.hadoop.io.BSONWritable;
-import com.mongodb.hadoop.io.MongoUpdateWritable;
+import java.io.IOException;
+
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -28,7 +25,11 @@ import org.bson.BSONEncoder;
 import org.bson.BSONObject;
 import org.bson.BasicBSONEncoder;
 
-import java.io.IOException;
+import com.mongodb.hadoop.io.BSONWritable;
+import com.mongodb.hadoop.io.MongoUpdateWritable;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
 
 
 public class BSONFileRecordWriter<K, V> extends RecordWriter<K, V> {

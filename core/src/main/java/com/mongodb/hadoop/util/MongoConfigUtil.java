@@ -17,16 +17,18 @@
 
 package com.mongodb.hadoop.util;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoURI;
-import com.mongodb.hadoop.splitter.MongoSplitter;
-import com.mongodb.hadoop.splitter.SampleSplitter;
-import com.mongodb.util.JSON;
+import java.io.IOException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,17 +44,16 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import com.mongodb.hadoop.splitter.MongoSplitter;
+import com.mongodb.hadoop.splitter.SampleSplitter;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.MongoURI;
+import com.mongodb.util.JSON;
 
 /**
  * Configuration helper tool for MongoDB related Map/Reduce jobs
@@ -105,6 +106,8 @@ public final class MongoConfigUtil {
     public static final String INPUT_KEY = "mongo.input.key";
     public static final String INPUT_NOTIMEOUT = "mongo.input.notimeout";
     public static final String INPUT_QUERY = "mongo.input.query";
+    public static final String INPUT_AGGREGATE = "mongo.input.aggregate";
+    public static final String INPUT_AGGREGATE_MAP = "mongo.input.aggregateMap";
     public static final String INPUT_FIELDS = "mongo.input.fields";
     public static final String INPUT_SORT = "mongo.input.sort";
     public static final String INPUT_LIMIT = "mongo.input.limit";
@@ -686,9 +689,11 @@ public final class MongoConfigUtil {
         try {
             final String json = conf.get(key);
             final DBObject obj = (DBObject) JSON.parse(json);
+            
             if (obj == null) {
                 return new BasicDBObject();
             } else {
+            	LOG.info(obj.toString());
                 return obj;
             }
         } catch (final Exception e) {
@@ -704,6 +709,18 @@ public final class MongoConfigUtil {
     public static void setQuery(final Configuration conf, final String query) {
         setJSON(conf, INPUT_QUERY, query);
     }
+    
+    public static void setAggregateMap(final Configuration conf, final String query) {
+        setJSON(conf, INPUT_AGGREGATE_MAP, query);
+    }
+    
+    public static void setAggregateMap(final Configuration conf, final DBObject fields) {
+        setDBObject(conf, INPUT_AGGREGATE_MAP, fields);
+    }
+
+    public static DBObject getAggregateMap(final Configuration conf) {
+        return getDBObject(conf, INPUT_AGGREGATE_MAP);
+    }
 
     /**
      * Set the query set for the Job using a DBObject.
@@ -716,6 +733,20 @@ public final class MongoConfigUtil {
 
     public static DBObject getQuery(final Configuration conf) {
         return getDBObject(conf, INPUT_QUERY);
+    }
+    
+    /**
+     * Set the aggregate set for the Job using a DBObject.
+     * @param conf the Configuration
+     * @param query the query
+     */
+    
+    public static void setAggregate(final Configuration conf, final boolean value) {
+        conf.setBoolean(INPUT_AGGREGATE, value);
+    }
+
+    public static boolean isAggregate(final Configuration conf) {
+        return conf.getBoolean(INPUT_AGGREGATE, false);
     }
 
     public static void setFields(final Configuration conf, final String fields) {

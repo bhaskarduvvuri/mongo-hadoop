@@ -16,6 +16,17 @@
 
 package com.mongodb.hadoop.splitter;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.InputSplit;
+
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.util.MongoClientURIBuilder;
+import com.mongodb.hadoop.util.MongoConfigUtil;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -27,16 +38,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.util.MongoClientURIBuilder;
-import com.mongodb.hadoop.util.MongoConfigUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.InputSplit;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /* This class is an implementation of MongoSplitter which

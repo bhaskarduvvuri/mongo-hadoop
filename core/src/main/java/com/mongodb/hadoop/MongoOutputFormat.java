@@ -16,16 +16,17 @@
 
 package com.mongodb.hadoop;
 
-import com.mongodb.hadoop.output.MongoOutputCommitter;
-import com.mongodb.hadoop.output.MongoRecordWriter;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.io.IOException;
+
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import java.io.IOException;
+import com.mongodb.hadoop.output.MongoOutputCommitter;
+import com.mongodb.hadoop.output.MongoRecordWriter;
+import com.mongodb.hadoop.util.MongoConfigUtil;
 
 public class MongoOutputFormat<K, V> extends OutputFormat<K, V> {
     public void checkOutputSpecs(final JobContext context) throws IOException {

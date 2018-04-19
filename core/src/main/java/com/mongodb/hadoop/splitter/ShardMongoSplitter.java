@@ -16,16 +16,17 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.MongoClientURI;
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.util.MongoConfigUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.InputSplit;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.InputSplit;
+
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.MongoClientURI;
 
 
 /**

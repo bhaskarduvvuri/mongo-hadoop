@@ -16,53 +16,66 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.util.MongoConfigUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.InputSplit;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.InputSplit;
+
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.util.DBCursorLocal;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.DBCursor;
+
 public abstract class MongoSplitter {
 
-    private Configuration configuration;
+	private Configuration configuration;
 
-    public MongoSplitter() {
-    }
+	public MongoSplitter() {
+	}
 
-    public MongoSplitter(final Configuration configuration) {
-        setConfiguration(configuration);
-    }
+	public MongoSplitter(final Configuration configuration) {
+		setConfiguration(configuration);
+	}
 
-    public void setConfiguration(final Configuration conf) {
-        configuration = conf;
-    }
+	public void setConfiguration(final Configuration conf) {
+		configuration = conf;
+	}
 
-    public abstract List<InputSplit> calculateSplits() throws SplitFailedException;
+	public abstract List<InputSplit> calculateSplits() throws SplitFailedException;
 
-    public Configuration getConfiguration() {
-        return configuration;
-    }
+	public Configuration getConfiguration() {
+		return configuration;
+	}
 
-    /**
-     * Get a list of nonempty input splits only.
-     *
-     * @param splits a list of input splits
-     * @return a new list of nonempty input splits
-     */
-    public static List<InputSplit> filterEmptySplits(
-      final List<InputSplit> splits) {
-        List<InputSplit> results = new ArrayList<InputSplit>(splits.size());
-        for (InputSplit split : splits) {
-            MongoInputSplit mis = (MongoInputSplit) split;
-            if (mis.getCursor().hasNext()) {
-                results.add(mis);
-            } else {
-                MongoConfigUtil.close(
-                  mis.getCursor().getCollection().getDB().getMongo());
-            }
-        }
-        return results;
-    }
+	/**
+	 * Get a list of nonempty input splits only.
+	 *
+	 * @param splits
+	 *            a list of input splits
+	 * @return a new list of nonempty input splits
+	 */
+	public static List<InputSplit> filterEmptySplits(final List<InputSplit> splits) {
+		List<InputSplit> results = new ArrayList<InputSplit>(splits.size());
+		for (InputSplit split : splits) {
+			MongoInputSplit mis = (MongoInputSplit) split;
+			if(mis.getCursor() instanceof DBCursor) {
+				DBCursor cursor = (DBCursor) mis.getCursor();
+				if (cursor.hasNext()) {
+					results.add(mis);
+				} else {
+					MongoConfigUtil.close(cursor.getCollection().getDB().getMongo());
+				}
+			} else {
+				DBCursorLocal cursor = (DBCursorLocal) mis.getCursor();
+				if (cursor.hasNext()) {
+					results.add(mis);
+				} else {
+					MongoConfigUtil.close(cursor.getCollection().getDB().getMongo());
+				}
+			}
+			
+		}
+		return results;
+	}
 }

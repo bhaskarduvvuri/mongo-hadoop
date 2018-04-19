@@ -1,19 +1,20 @@
 package com.mongodb.hadoop.input;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClientURI;
-import com.mongodb.gridfs.GridFS;
-import com.mongodb.gridfs.GridFSDBFile;
-import com.mongodb.hadoop.util.MongoConfigUtil;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.bson.types.ObjectId;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.bson.types.ObjectId;
+
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClientURI;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
 
 public class GridFSSplit extends InputSplit
   implements org.apache.hadoop.mapred.InputSplit {

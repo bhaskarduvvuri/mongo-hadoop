@@ -16,7 +16,9 @@
 
 package com.mongodb.hadoop.mapred.input;
 
+import com.mongodb.Cursor;
 import com.mongodb.DBCursor;
+import com.mongodb.hadoop.util.DBCursorLocal;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.hadoop.input.MongoInputSplit;
@@ -36,7 +38,7 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
 
     private static final Log LOG = LogFactory.getLog(MongoRecordReader.class);
     
-    private final DBCursor cursor;
+    private final Cursor cursor;
     private BSONWritable currentVal = new BSONWritable();
     private BSONWritable currentKey = new BSONWritable();
     private float seen = 0;
@@ -54,7 +56,13 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
     public void close() {
         if (cursor != null) {
             cursor.close();
-            MongoConfigUtil.close(cursor.getCollection().getDB().getMongo());
+            if(cursor instanceof DBCursor) {
+            	DBCursor cursorLocal = (DBCursor) cursor;
+            	MongoConfigUtil.close(cursorLocal.getCollection().getDB().getMongo());
+            } else {
+            	DBCursorLocal cursorLocal = (DBCursorLocal) cursor;
+            	MongoConfigUtil.close(cursorLocal.getCollection().getDB().getMongo());
+            }
         }
     }
 

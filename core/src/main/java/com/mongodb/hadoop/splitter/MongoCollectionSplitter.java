@@ -16,16 +16,13 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoURI;
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -34,12 +31,16 @@ import org.bson.BSONObject;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClientURI;
+import com.mongodb.MongoURI;
 
 public abstract class MongoCollectionSplitter extends MongoSplitter {
 
@@ -222,8 +223,6 @@ public abstract class MongoCollectionSplitter extends MongoSplitter {
         }
         if (split == null) {
             split = new MongoInputSplit(getConfiguration());
-            split.setMin(splitMin);
-            split.setMax(splitMax);
         }
         return split;
     }

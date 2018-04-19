@@ -16,15 +16,13 @@
 
 package com.mongodb.hadoop.input;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.Bytes;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoURI;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -38,340 +36,374 @@ import org.bson.BasicBSONCallback;
 import org.bson.BasicBSONDecoder;
 import org.bson.BasicBSONEncoder;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import com.mongodb.hadoop.util.DBCursorLocal;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.AggregationOptions;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.Bytes;
+import com.mongodb.Cursor;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClientURI;
+import com.mongodb.MongoURI;
 
 public class MongoInputSplit extends InputSplit implements Writable, org.apache.hadoop.mapred.InputSplit {
-    private static final Log LOG = LogFactory.getLog(MongoInputSplit.class);
-    //CHECKSTYLE:OFF
-    protected MongoClientURI inputURI;
-    protected MongoClientURI authURI;
-    protected String keyField = "_id";
-    protected DBObject fields;
-    protected DBObject query;
-    protected DBObject sort;
-    protected DBObject min;
-    protected DBObject max;
-    protected Integer limit;
-    protected Integer skip;
-    protected boolean notimeout = false;
-    protected transient DBCursor cursor;
+	private static final Log LOG = LogFactory.getLog(MongoInputSplit.class);
+	// CHECKSTYLE:OFF
+	protected MongoClientURI inputURI;
+	protected MongoClientURI authURI;
+	protected String keyField = "_id";
+	protected DBObject fields;
+	protected DBObject query;
+	protected boolean aggregate = false;
+	protected DBObject aggregateMap;
+	protected DBObject sort;
+	protected DBObject min;
+	protected DBObject max;
+	protected Integer limit;
+	protected Integer skip;
+	protected boolean notimeout = false;
+	protected transient DBCursor cursor;
 
-    protected transient BSONEncoder _bsonEncoder = new BasicBSONEncoder();
-    protected transient BSONDecoder _bsonDecoder = new BasicBSONDecoder();
-    //CHECKSTYLE:ON
+	protected transient BSONEncoder _bsonEncoder = new BasicBSONEncoder();
+	protected transient BSONDecoder _bsonDecoder = new BasicBSONDecoder();
+	// CHECKSTYLE:ON
 
-    public MongoInputSplit() {
-    }
+	public MongoInputSplit() {
+	}
 
-    public MongoInputSplit(final MongoInputSplit other) {
-        setFields(other.getFields());
-        setAuthURI(other.getAuthURI());
-        setInputURI(other.getInputURI());
-        setKeyField(other.getKeyField());
-        setMax(other.getMax());
-        setMin(other.getMin());
-        setNoTimeout(other.getNoTimeout());
-        setQuery(other.getQuery());
-        setSort(other.getSort());
-        setLimit(other.getLimit());
-        setSkip(other.getSkip());
-    }
+	public MongoInputSplit(final MongoInputSplit other) {
+		setFields(other.getFields());
+		setAuthURI(other.getAuthURI());
+		setInputURI(other.getInputURI());
+		setKeyField(other.getKeyField());
+		setMax(other.getMax());
+		setMin(other.getMin());
+		setNoTimeout(other.getNoTimeout());
+		setQuery(other.getQuery());
+		setAggregate(other.isAggregate());
+		setAggregateMap(other.getAggregateMap());
+		setSort(other.getSort());
+		setLimit(other.getLimit());
+		setSkip(other.getSkip());
+	}
 
-    public MongoInputSplit(final Configuration conf) {
-        setFields(MongoConfigUtil.getFields(conf));
-        setAuthURI(MongoConfigUtil.getAuthURI(conf));
-        setInputURI(MongoConfigUtil.getInputURI(conf));
-        setKeyField(MongoConfigUtil.getInputKey(conf));
-        setMax(MongoConfigUtil.getMaxSplitKey(conf));
-        setMin(MongoConfigUtil.getMinSplitKey(conf));
-        setNoTimeout(MongoConfigUtil.isNoTimeout(conf));
-        setQuery(MongoConfigUtil.getQuery(conf));
-        setSort(MongoConfigUtil.getSort(conf));
-        setLimit(MongoConfigUtil.getLimit(conf));
-        setSkip(MongoConfigUtil.getSkip(conf));
-    }
+	public MongoInputSplit(final Configuration conf) {
+		setFields(MongoConfigUtil.getFields(conf));
+		setAuthURI(MongoConfigUtil.getAuthURI(conf));
+		setInputURI(MongoConfigUtil.getInputURI(conf));
+		setKeyField(MongoConfigUtil.getInputKey(conf));
+		setMax(MongoConfigUtil.getMaxSplitKey(conf));
+		setMin(MongoConfigUtil.getMinSplitKey(conf));
+		setNoTimeout(MongoConfigUtil.isNoTimeout(conf));
+		setQuery(MongoConfigUtil.getQuery(conf));
+		setAggregate(MongoConfigUtil.isAggregate(conf));
+		setAggregateMap(MongoConfigUtil.getAggregateMap(conf));
+		setSort(MongoConfigUtil.getSort(conf));
+		setLimit(MongoConfigUtil.getLimit(conf));
+		setSkip(MongoConfigUtil.getSkip(conf));
+	}
 
-    public void setInputURI(final MongoClientURI inputURI) {
-        this.inputURI = inputURI;
-    }
+	public void setInputURI(final MongoClientURI inputURI) {
+		this.inputURI = inputURI;
+	}
 
-    public MongoClientURI getInputURI() {
-        return this.inputURI;
-    }
+	public MongoClientURI getInputURI() {
+		return this.inputURI;
+	}
 
-    /**
-     * @deprecated use {@link #setAuthURI(MongoClientURI)} instead
-     * @param authURI a MongoDB URI providing credentials
-     */
-    @Deprecated
-    public void setAuthURI(final MongoURI authURI) {
-        setAuthURI(authURI != null ? new MongoClientURI(authURI.toString()) : null);
-    }
+	/**
+	 * @deprecated use {@link #setAuthURI(MongoClientURI)} instead
+	 * @param authURI
+	 *            a MongoDB URI providing credentials
+	 */
+	@Deprecated
+	public void setAuthURI(final MongoURI authURI) {
+		setAuthURI(authURI != null ? new MongoClientURI(authURI.toString()) : null);
+	}
 
-    /**
-     * Set the MongoDB URI to use for authentication.
-     * @param authURI the MongoDB URI
-     */
-    public void setAuthURI(final MongoClientURI authURI) {
-        this.authURI = authURI;
-    }
+	/**
+	 * Set the MongoDB URI to use for authentication.
+	 * 
+	 * @param authURI
+	 *            the MongoDB URI
+	 */
+	public void setAuthURI(final MongoClientURI authURI) {
+		this.authURI = authURI;
+	}
 
-    public MongoClientURI getAuthURI() {
-        return this.authURI;
-    }
+	public MongoClientURI getAuthURI() {
+		return this.authURI;
+	}
 
-    @Override
-    public String[] getLocations() {
-        if (this.inputURI == null) {
-            return null;
-        }
-        return this.inputURI.getHosts().toArray(new String[inputURI.getHosts().size()]);
-    }
+	@Override
+	public String[] getLocations() {
+		if (this.inputURI == null) {
+			return null;
+		}
+		return this.inputURI.getHosts().toArray(new String[inputURI.getHosts().size()]);
+	}
 
-    @Override
-    public long getLength() {
-        return Long.MAX_VALUE;
-    }
+	@Override
+	public long getLength() {
+		return Long.MAX_VALUE;
+	}
 
-    public String getKeyField() {
-        return this.keyField;
-    }
+	public String getKeyField() {
+		return this.keyField;
+	}
 
-    public void setKeyField(final String keyField) {
-        this.keyField = keyField;
-    }
+	public void setKeyField(final String keyField) {
+		this.keyField = keyField;
+	}
 
-    public DBObject getFields() {
-        return this.fields;
-    }
+	public DBObject getFields() {
+		return this.fields;
+	}
 
-    public void setFields(final DBObject fields) {
-        this.fields = fields;
-    }
+	public void setFields(final DBObject fields) {
+		this.fields = fields;
+	}
 
-    public DBObject getQuery() {
-        return this.query;
-    }
+	public DBObject getQuery() {
+		return this.query;
+	}
 
-    public void setQuery(final DBObject query) {
-        this.query = query;
-    }
+	public void setQuery(final DBObject query) {
+		this.query = query;
+	}
 
-    public DBObject getSort() {
-        return this.sort;
-    }
+	public void setAggregate(final boolean aggregate) {
+		this.aggregate = aggregate;
+	}
 
-    public void setSort(final DBObject sort) {
-        this.sort = sort;
-    }
+	public boolean isAggregate() {
+		return this.aggregate;
+	}
 
-    public DBObject getMin() {
-        return this.min;
-    }
+	public DBObject getSort() {
+		return this.sort;
+	}
 
-    public void setMin(final DBObject min) {
-        this.min = min;
-    }
+	public void setSort(final DBObject sort) {
+		this.sort = sort;
+	}
 
-    public DBObject getMax() {
-        return this.max;
-    }
+	public DBObject getMin() {
+		return this.min;
+	}
 
-    public void setMax(final DBObject max) {
-        this.max = max;
-    }
+	public void setMin(final DBObject min) {
+		this.min = min;
+	}
 
-    public boolean getNoTimeout() {
-        return this.notimeout;
-    }
+	public DBObject getMax() {
+		return this.max;
+	}
 
-    public void setNoTimeout(final boolean notimeout) {
-        this.notimeout = notimeout;
-    }
+	public void setMax(final DBObject max) {
+		this.max = max;
+	}
 
-    public Integer getLimit() {
-        return limit;
-    }
+	public boolean getNoTimeout() {
+		return this.notimeout;
+	}
 
-    public void setLimit(final Integer limit) {
-        this.limit = limit;
-    }
+	public void setNoTimeout(final boolean notimeout) {
+		this.notimeout = notimeout;
+	}
 
-    public Integer getSkip() {
-        return skip;
-    }
+	public Integer getLimit() {
+		return limit;
+	}
 
-    public void setSkip(final Integer skip) {
-        this.skip = skip;
-    }
+	public void setLimit(final Integer limit) {
+		this.limit = limit;
+	}
 
-    @Override
-    public void write(final DataOutput out) throws IOException {
-        BSONObject spec = BasicDBObjectBuilder.start()
-          .add("inputURI", getInputURI().toString())
-          .add("authURI", getAuthURI() != null ? getAuthURI().toString() : null)
-          .add("keyField", getKeyField())
-          .add("fields", getFields())
-          .add("query", getQuery())
-          .add("sort", getSort())
-          .add("min", getMin())
-          .add("max", getMax())
-          .add("notimeout", getNoTimeout())
-          .add("limit", limit)
-          .add("skip", skip)
-          .get();
-        byte[] buf = _bsonEncoder.encode(spec);
-        out.write(buf);
-    }
+	public Integer getSkip() {
+		return skip;
+	}
 
-    @Override
-    public void readFields(final DataInput in) throws IOException {
-        BSONCallback cb = new BasicBSONCallback();
-        BSONObject spec;
-        byte[] l = new byte[4];
-        in.readFully(l);
-        int dataLen = org.bson.io.Bits.readInt(l);
-        byte[] data = new byte[dataLen + 4];
-        System.arraycopy(l, 0, data, 0, 4);
-        in.readFully(data, 4, dataLen - 4);
-        _bsonDecoder.decode(data, cb);
-        spec = (BSONObject) cb.get();
-        setInputURI(new MongoClientURI((String) spec.get("inputURI")));
+	public void setSkip(final Integer skip) {
+		this.skip = skip;
+	}
 
-        if (spec.get("authURI") != null) {
-            setAuthURI(new MongoClientURI((String) spec.get("authURI")));
-        } else {
-            setAuthURI((MongoClientURI) null);
-        }
+	public DBObject getAggregateMap() {
+		return aggregateMap;
+	}
 
-        setKeyField((String) spec.get("keyField"));
-        BSONObject temp = (BSONObject) spec.get("fields");
-        setFields(temp != null ? new BasicDBObject(temp.toMap()) : null);
+	public void setAggregateMap(DBObject aggregateMap) {
+		this.aggregateMap = aggregateMap;
+	}
 
-        temp = (BSONObject) spec.get("query");
-        setQuery(temp != null ? new BasicDBObject(temp.toMap()) : null);
+	@Override
+	public void write(final DataOutput out) throws IOException {
+		BSONObject spec = BasicDBObjectBuilder.start().add("inputURI", getInputURI().toString())
+				.add("authURI", getAuthURI() != null ? getAuthURI().toString() : null).add("keyField", getKeyField())
+				.add("fields", getFields()).add("query", getQuery()).add("aggregate", isAggregate())
+				.add("aggregateMap", getAggregateMap()).add("sort", getSort()).add("min", getMin()).add("max", getMax())
+				.add("notimeout", getNoTimeout()).add("limit", limit).add("skip", skip).get();
+		byte[] buf = _bsonEncoder.encode(spec);
+		out.write(buf);
+	}
 
-        temp = (BSONObject) spec.get("sort");
-        setSort(temp != null ? new BasicDBObject(temp.toMap()) : null);
+	@Override
+	public void readFields(final DataInput in) throws IOException {
+		BSONCallback cb = new BasicBSONCallback();
+		BSONObject spec;
+		byte[] l = new byte[4];
+		in.readFully(l);
+		int dataLen = org.bson.io.Bits.readInt(l);
+		byte[] data = new byte[dataLen + 4];
+		System.arraycopy(l, 0, data, 0, 4);
+		in.readFully(data, 4, dataLen - 4);
+		_bsonDecoder.decode(data, cb);
+		spec = (BSONObject) cb.get();
+		setInputURI(new MongoClientURI((String) spec.get("inputURI")));
 
-        temp = (BSONObject) spec.get("min");
-        setMin(temp != null ? new BasicDBObject(temp.toMap()) : null);
+		if (spec.get("authURI") != null) {
+			setAuthURI(new MongoClientURI((String) spec.get("authURI")));
+		} else {
+			setAuthURI((MongoClientURI) null);
+		}
 
-        temp = (BSONObject) spec.get("max");
-        setMax(temp != null ? new BasicDBObject(temp.toMap()) : null);
+		setAggregate((Boolean) spec.get("aggregate"));
 
-        setLimit((Integer) spec.get("limit"));
+		setKeyField((String) spec.get("keyField"));
+		BSONObject temp = (BSONObject) spec.get("fields");
+		setFields(temp != null ? new BasicDBObject(temp.toMap()) : null);
 
-        setSkip((Integer) spec.get("skip"));
+		temp = (BSONObject) spec.get("query");
+		setQuery(temp != null ? new BasicDBObject(temp.toMap()) : null);
 
-        setNoTimeout((Boolean) spec.get("notimeout"));
-    }
+		temp = (BSONObject) spec.get("aggregateMap");
+		setAggregateMap(temp != null ? new BasicDBObject(temp.toMap()) : null);
 
-    public DBCursor getCursor() {
-        if (this.cursor == null) {
-            DBCollection coll;
-            if (this.authURI != null) {
-                coll = MongoConfigUtil.getCollectionWithAuth(this.inputURI, this.authURI);
-            } else {
-                coll = MongoConfigUtil.getCollection(this.inputURI);
-            }
+		temp = (BSONObject) spec.get("sort");
+		setSort(temp != null ? new BasicDBObject(temp.toMap()) : null);
 
-            this.cursor = coll.find(this.query, this.fields).sort(this.sort);
-            if (this.notimeout) {
-                this.cursor.setOptions(Bytes.QUERYOPTION_NOTIMEOUT);
-            }
-            if (this.min != null) {
-                this.cursor.addSpecial("$min", this.min);
-            }
-            if (this.max != null) {
-                this.cursor.addSpecial("$max", this.max);
-            }
-            if (skip != null) {
-                cursor = cursor.skip(skip);
-            }
-            if (limit != null) {
-                cursor = cursor.limit(limit);
-            }
-        }
-        return this.cursor;
-    }
+		temp = (BSONObject) spec.get("min");
+		setMin(temp != null ? new BasicDBObject(temp.toMap()) : null);
 
-    @Override
-    public String toString() {
-        String result =
-          "MongoInputSplit{inputURI hosts=" + this.inputURI.getHosts()
-            + ", inputURI namespace=" + this.inputURI.getDatabase() + "."
-            + this.inputURI.getCollection();
-        if (authURI != null) {
-            result += "authURI hosts=" + authURI.getHosts()
-              + ", authURI database=" + authURI.getDatabase();
-        }
-        return result
-          + ", min=" + this.min + ", max=" + this.max
-          + ", query=" + this.query
-          + ", sort=" + this.sort
-          + ", fields=" + this.fields
-          + ", limit=" + this.limit
-          + ", skip=" + this.skip
-          + ", notimeout=" + this.notimeout + '}';
-    }
+		temp = (BSONObject) spec.get("max");
+		setMax(temp != null ? new BasicDBObject(temp.toMap()) : null);
 
-    @Override
-    public int hashCode() {
-        int result = this.inputURI != null ? this.inputURI.hashCode() : 0;
-        result = 31 * result + (this.query != null ? this.query.hashCode() : 0);
-        result = 31 * result + (this.fields != null ? this.fields.hashCode() : 0);
-        result = 31 * result + (this.max != null ? this.max.hashCode() : 0);
-        result = 31 * result + (this.min != null ? this.min.hashCode() : 0);
-        result = 31 * result + (this.sort != null ? this.sort.hashCode() : 0);
-        result = 31 * result + (this.notimeout ? 1 : 0);
-        result = 31 * result + (this.limit != null ? this.limit.hashCode() : 0);
-        result = 31 * result + (this.skip != null ? this.skip.hashCode() : 0);
-        return result;
-    }
+		setLimit((Integer) spec.get("limit"));
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        MongoInputSplit that = (MongoInputSplit) o;
+		setSkip((Integer) spec.get("skip"));
 
-        if (getNoTimeout() != that.getNoTimeout()) {
-            return false;
-        }
-        if (getFields() != null ? !getFields().equals(that.getFields()) : that.getFields() != null) {
-            return false;
-        }
-        if (getInputURI() != null ? !getInputURI().equals(that.getInputURI()) : that.getInputURI() != null) {
-            return false;
-        }
-        if (getQuery() != null ? !getQuery().equals(that.getQuery()) : that.getQuery() != null) {
-            return false;
-        }
-        if (getSort() != null ? !getSort().equals(that.getSort()) : that.getSort() != null) {
-            return false;
-        }
-        if (getMax() != null ? !getMax().equals(that.getMax()) : that.getMax() != null) {
-            return false;
-        }
-        if (getMin() != null ? !getMin().equals(that.getMin()) : that.getMin() != null) {
-            return false;
-        }
-        if (limit == null && that.getLimit() != null
-          || !limit.equals(that.getLimit())) {
-            return false;
-        }
-        if (skip == null && that.getSkip() != null
-          || !skip.equals(that.getSkip())) {
-            return false;
-        }
-        return true;
-    }
+		setNoTimeout((Boolean) spec.get("notimeout"));
+	}
+
+	public Cursor getCursor() {
+		if (this.cursor == null) {
+			DBCollection coll;
+			if (this.authURI != null) {
+				coll = MongoConfigUtil.getCollectionWithAuth(this.inputURI, this.authURI);
+			} else {
+				coll = MongoConfigUtil.getCollection(this.inputURI);
+			}
+
+			if (this.aggregate) {
+				System.out.println("DBObject: " + this.aggregateMap.toString());
+				Map<String, BSONObject> aggMap = this.aggregateMap.toMap();
+				List<DBObject> inOrderList = new ArrayList<DBObject>();
+				for (String key : aggMap.keySet()) {
+					System.out.println("DBObject: Key" + key + " Value" + aggMap.get(key).toString());
+					inOrderList.add(new BasicDBObject(aggMap.get(key).toMap()));
+				}
+				DBCursorLocal dbCursorLocal = new DBCursorLocal(
+						coll.aggregate(inOrderList, AggregationOptions.builder().build()), coll);
+				return dbCursorLocal;
+			} else {
+				this.cursor = coll.find(this.query, this.fields).sort(this.sort);
+				if (this.notimeout) {
+					this.cursor.setOptions(Bytes.QUERYOPTION_NOTIMEOUT);
+				}
+				if (this.min != null) {
+					this.cursor.addSpecial("$min", this.min);
+				}
+				if (this.max != null) {
+					this.cursor.addSpecial("$max", this.max);
+				}
+				if (skip != null) {
+					cursor = cursor.skip(skip);
+				}
+				if (limit != null) {
+					cursor = cursor.limit(limit);
+				}
+			}
+		}
+		return this.cursor;
+	}
+
+	@Override
+	public String toString() {
+		String result = "MongoInputSplit{inputURI hosts=" + this.inputURI.getHosts() + ", inputURI namespace="
+				+ this.inputURI.getDatabase() + "." + this.inputURI.getCollection();
+		if (authURI != null) {
+			result += "authURI hosts=" + authURI.getHosts() + ", authURI database=" + authURI.getDatabase();
+		}
+		return result + ", min=" + this.min + ", max=" + this.max + ", query=" + this.query + ", aggregate="
+				+ this.aggregate + ", " + this.aggregateMap + ", sort=" + this.sort + ", fields=" + this.fields
+				+ ", limit=" + this.limit + ", skip=" + this.skip + ", notimeout=" + this.notimeout + '}';
+	}
+
+	@Override
+	public int hashCode() {
+		int result = this.inputURI != null ? this.inputURI.hashCode() : 0;
+		result = 31 * result + (this.query != null ? this.query.hashCode() : 0);
+		result = 31 * result + (this.fields != null ? this.fields.hashCode() : 0);
+		result = 31 * result + (this.max != null ? this.max.hashCode() : 0);
+		result = 31 * result + (this.min != null ? this.min.hashCode() : 0);
+		result = 31 * result + (this.sort != null ? this.sort.hashCode() : 0);
+		result = 31 * result + (this.notimeout ? 1 : 0);
+		result = 31 * result + (this.limit != null ? this.limit.hashCode() : 0);
+		result = 31 * result + (this.skip != null ? this.skip.hashCode() : 0);
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		MongoInputSplit that = (MongoInputSplit) o;
+
+		if (getNoTimeout() != that.getNoTimeout()) {
+			return false;
+		}
+		if (getFields() != null ? !getFields().equals(that.getFields()) : that.getFields() != null) {
+			return false;
+		}
+		if (getInputURI() != null ? !getInputURI().equals(that.getInputURI()) : that.getInputURI() != null) {
+			return false;
+		}
+		if (getQuery() != null ? !getQuery().equals(that.getQuery()) : that.getQuery() != null) {
+			return false;
+		}
+		if (getSort() != null ? !getSort().equals(that.getSort()) : that.getSort() != null) {
+			return false;
+		}
+		if (getMax() != null ? !getMax().equals(that.getMax()) : that.getMax() != null) {
+			return false;
+		}
+		if (getMin() != null ? !getMin().equals(that.getMin()) : that.getMin() != null) {
+			return false;
+		}
+		if (limit == null && that.getLimit() != null || !limit.equals(that.getLimit())) {
+			return false;
+		}
+		if (skip == null && that.getSkip() != null || !skip.equals(that.getSkip())) {
+			return false;
+		}
+		return true;
+	}
 
 }

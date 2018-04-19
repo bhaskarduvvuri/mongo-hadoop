@@ -16,22 +16,23 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClientURI;
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputSplit;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClientURI;
 
 /**
  * This class is an implementation of MongoSplitter which can be used on sharded collections. It gets the chunks information from the

@@ -16,18 +16,19 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.MongoClientURI;
-import com.mongodb.hadoop.input.MongoInputSplit;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+import static java.lang.String.format;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputSplit;
 
-import java.util.Collections;
-import java.util.List;
-
-import static java.lang.String.format;
+import com.mongodb.hadoop.input.MongoInputSplit;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.MongoClientURI;
 
 /* This implementation of MongoSplitter does not actually
  * do any splitting, it will just create a single input split

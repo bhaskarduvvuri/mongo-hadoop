@@ -16,20 +16,22 @@
 
 package com.mongodb.hadoop.splitter;
 
-import com.mongodb.DBObject;
-import com.mongodb.MongoClientURI;
-import com.mongodb.hadoop.util.MongoConfigUtil;
+
+import static java.lang.String.format;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.String.format;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClientURI;
 
 public class MultiMongoCollectionSplitter extends MongoSplitter {
 

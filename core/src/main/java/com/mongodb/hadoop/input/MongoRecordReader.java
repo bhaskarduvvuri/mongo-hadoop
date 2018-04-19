@@ -16,12 +16,6 @@
 
 package com.mongodb.hadoop.input;
 
-// Mongo
-
-import com.mongodb.DBCursor;
-import com.mongodb.MongoException;
-import com.mongodb.hadoop.util.MongoConfigUtil;
-import com.mongodb.hadoop.util.MongoPathRetriever;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.NullWritable;
@@ -29,6 +23,16 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.bson.BSONObject;
+
+import com.mongodb.hadoop.util.DBCursorLocal;
+import com.mongodb.hadoop.util.MongoConfigUtil;
+import com.mongodb.hadoop.util.MongoPathRetriever;
+import com.mongodb.Cursor;
+
+// Mongo
+
+import com.mongodb.DBCursor;
+import com.mongodb.MongoException;
 
 // Hadoop
 // Commons
@@ -44,7 +48,13 @@ public class MongoRecordReader extends RecordReader<Object, BSONObject> {
     public void close() {
         if (cursor != null) {
             cursor.close();
-            MongoConfigUtil.close(cursor.getCollection().getDB().getMongo());
+            if(cursor instanceof DBCursor) {
+            	DBCursor cursorLocal = (DBCursor) cursor;
+            	MongoConfigUtil.close(cursorLocal.getCollection().getDB().getMongo());
+            } else {
+            	DBCursorLocal cursorLocal = (DBCursorLocal) cursor;
+            	MongoConfigUtil.close(cursorLocal.getCollection().getDB().getMongo());
+            }
         }
     }
 
@@ -94,7 +104,7 @@ public class MongoRecordReader extends RecordReader<Object, BSONObject> {
 
     private BSONObject current;
     private final MongoInputSplit split;
-    private final DBCursor cursor;
+    private final Cursor cursor;
     private float seen = 0;
     private float total;
 
